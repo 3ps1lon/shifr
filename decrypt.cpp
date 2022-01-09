@@ -15,23 +15,31 @@ void decr(std::string file_name, unsigned int key, unsigned int leftshift) {
 
 	std::vector<char> decryptData(encryptData.size());
 
-	for (int i = 0; i < encryptData.size(); i += 2) {
+	for (int i = 0; i < encryptData.size(); i += 4) {
 		unsigned int gamma = rand();
-		unsigned char byte1 = encryptData[i];
-		unsigned char byte2 = i + 1 < encryptData.size() ? encryptData[i + 1] : 0u;
+		unsigned char b0 = encryptData[i];
+		unsigned char b1 = i + 1 < encryptData.size() ? encryptData[i + 1] : 0u;
+		unsigned char b2 = i + 2 < encryptData.size() ? encryptData[i + 2] : 0u;
+		unsigned char b3 = i + 3 < encryptData.size() ? encryptData[i + 3] : 0u;
 
-		unsigned int encrypt = ((static_cast<unsigned int>(byte1) << 8u) |
-			static_cast<unsigned int> (byte2));
+		unsigned int encrypt = ((static_cast<unsigned int>(b0) << 24u) |
+			(static_cast<unsigned int>(b1) << 16u) |
+			(static_cast<unsigned int>(b2) << 8u) | (static_cast<unsigned int>(b3)));
 
-		unsigned int shift_encrypt = ((encrypt & 0xFFFF) >> leftshift) |
-			encrypt << (16 - leftshift);
+		unsigned int shift_encrypt = ((encrypt & 0xFFFFFFFF) << leftshift) |
+			encrypt >> (32 - leftshift);
 
 		unsigned int res = shift_encrypt ^ gamma;
 
-		unsigned char r1 = res >> 8;
-		unsigned char r2 = res;
-		decryptData[i] = r1;
-		decryptData[i + 1] = r2;
+		unsigned char r0 = res >> 24;
+		unsigned char r1 = res >> 16;
+		unsigned char r2 = res >> 8;
+		unsigned char r3 = res;
+
+		decryptData[i] = r0;
+		decryptData[i + 1] = r1;
+		decryptData[i + 2] = r2;
+		decryptData[i + 3] = r3;
 	}
 
 	for (int i = 0; i < decryptData.size(); i++) {
